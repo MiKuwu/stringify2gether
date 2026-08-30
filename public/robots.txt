@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /admin/
+Disallow: /create
+Disallow: /edit/
+Disallow: /profile/
+Disallow: /banned
+
+Sitemap: https://stringify2gether.io.vn/sitemap.xml

@@ -1,0 +1,22 @@
+# Stringify Together
+
+> Nền tảng chia sẻ kiến thức và chiến thuật cho game Strinova - cộng đồng người chơi Việt Nam.
+
+Stringify Together là một diễn đàn cộng đồng nơi người chơi Strinova có thể:
+- Đăng và chia sẻ bài viết hướng dẫn, chiến thuật, kinh nghiệm
+- Bình luận và thảo luận về game
+- Bình chọn (Poll) các ý kiến trong cộng đồng
+- Tương tác với các thành viên khác
+
+## Liên kết quan trọng
+
+- Homepage: https://stringify2gether.io.vn
+- Các danh mục bài viết: https://stringify2gether.io.vn/category/[slug]
+
+## Nội dung
+
+Trang web chứa các bài viết bằng tiếng Việt về game Strinova, bao gồm hướng dẫn nhân vật, chiến thuật đội nhóm, và thông tin cập nhật từ cộng đồng.
+
+## Liên hệ
+
+Để liên hệ với quản trị viên, vui lòng truy cập trang web và sử dụng chức năng báo cáo hoặc đề xuất.
