@@ -1,6 +1,8 @@
 ﻿"use client"
 import { useEffect, useState } from "react"
 import { useSession } from "next-auth/react"
+import Image from "next/image"
+import Link from "next/link"
 import { Wrench } from "lucide-react"
 
 interface MaintenanceData {
@@ -17,26 +19,38 @@ export default function MaintenancePoller() {
 
   const isImmune = session?.user?.role === "ADMIN" || session?.user?.role === "ADMIN + FOUNDER"
 
-  const checkMaintenance = async () => {
-    try {
-      const res = await fetch("/api/settings/maintenance", { cache: "no-store" })
-      if (res.ok) {
-        const data = await res.json()
-        setMaintenanceData(data)
-      }
-    } catch {
-      // ignore
-    } finally {
-      setChecked(true)
-    }
-  }
-
   useEffect(() => {
     // Wait until session is resolved before checking
     if (status === "loading") return
-    checkMaintenance()
-    const interval = setInterval(checkMaintenance, 15000)
-    return () => clearInterval(interval)
+
+    let cancelled = false
+    const checkMaintenance = async () => {
+      try {
+        const res = await fetch("/api/settings/maintenance", { cache: "no-store" })
+        if (res.ok && !cancelled) {
+          const data = await res.json()
+          setMaintenanceData(data)
+        }
+      } catch {
+        // Ignore transient network errors and keep the last known state.
+      } finally {
+        if (!cancelled) setChecked(true)
+      }
+    }
+
+    const checkWhenVisible = () => {
+      if (document.visibilityState === "visible") void checkMaintenance()
+    }
+
+    checkWhenVisible()
+    const interval = window.setInterval(checkWhenVisible, 60000)
+    document.addEventListener("visibilitychange", checkWhenVisible)
+
+    return () => {
+      cancelled = true
+      window.clearInterval(interval)
+      document.removeEventListener("visibilitychange", checkWhenVisible)
+    }
   }, [status])
 
   // Not yet checked, or session still loading — don't flash maintenance screen
@@ -54,13 +68,20 @@ export default function MaintenancePoller() {
     <div className="fixed inset-0 z-[99999] min-h-screen flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 p-4 text-center">
       <div className="absolute top-4 right-4">
         {session ? (
-          <a href="/api/auth/signout" className="text-sm text-slate-500 hover:text-slate-700 dark:text-slate-300 transition">Đăng xuất</a>
+          <Link href="/api/auth/signout" prefetch={false} className="text-sm text-slate-500 hover:text-slate-700 dark:text-slate-300 transition">Đăng xuất</Link>
         ) : (
-          <a href="/api/auth/signin" className="text-sm text-slate-500 hover:text-teal-400 transition">Đăng nhập Admin</a>
+          <Link href="/api/auth/signin" prefetch={false} className="text-sm text-slate-500 hover:text-teal-400 transition">Đăng nhập Admin</Link>
         )}
       </div>
       {imageUrl ? (
-        <img src={imageUrl} alt="Maintenance" className="max-w-md w-full rounded-lg mb-8 shadow-2xl object-cover border border-slate-200 dark:border-slate-800" />
+        <Image
+          src={imageUrl}
+          alt="Maintenance"
+          width={448}
+          height={320}
+          sizes="(max-width: 512px) calc(100vw - 2rem), 448px"
+          className="max-w-md w-full h-auto rounded-lg mb-8 shadow-2xl object-cover border border-slate-200 dark:border-slate-800"
+        />
       ) : (
         <div className="w-24 h-24 bg-white dark:bg-slate-900 rounded-full flex items-center justify-center text-teal-500 mb-8 animate-pulse shadow-lg border border-slate-200 dark:border-slate-800">
           <Wrench size={48} />

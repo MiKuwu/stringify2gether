@@ -9,18 +9,18 @@ datasource db {
 }
 
 model Account {
-  id                 String  @id @default(cuid())
-  userId             String
-  type               String
-  provider           String
-  providerAccountId  String
-  refresh_token      String?
-  access_token       String?
-  expires_at         Int?
-  token_type         String?
-  scope              String?
-  id_token           String?
-  session_state      String?
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -47,35 +47,37 @@ model User {
   username           String?   @unique // For displaying author name
   lastUsernameChange DateTime?
   regionCode         String    @default("VN")
-  
-  // Moderation fields
-  bannedUntil        DateTime? 
-  bannedAt           DateTime?
-  banReason          String?
-  banMessage         String?
 
-  bio                String?
-  facebookUrl        String?
-  discordUrl         String?
-  youtubeUrl         String?
-  
-  accounts           Account[]
-  sessions           Session[]
-  posts              Post[]
-  comments           Comment[]
-  likes              Like[]
-  reports            Report[]
-  followers          Follows[] @relation("following")
-  following          Follows[] @relation("follower")
-  commentVotes       CommentVote[]
-  savedPosts         SavedPost[]
-  notifications      Notification[] @relation("UserNotifications")
+  // Moderation fields
+  bannedUntil DateTime?
+  bannedAt    DateTime?
+  banReason   String?
+  banMessage  String?
+
+  bio         String?
+  facebookUrl String?
+  discordUrl  String?
+  youtubeUrl  String?
+
+  accounts               Account[]
+  sessions               Session[]
+  posts                  Post[]
+  comments               Comment[]
+  likes                  Like[]
+  reports                Report[]
+  followers              Follows[]      @relation("following")
+  following              Follows[]      @relation("follower")
+  commentVotes           CommentVote[]
+  savedPosts             SavedPost[]
+  notifications          Notification[] @relation("UserNotifications")
   initiatedNotifications Notification[] @relation("NotificationActor")
-  mutedPosts         MutedPost[]
-  adminLogs          AdminLog[]
-  appealVotes        AppealVote[]
-  suggestions        Suggestion[]
-  pollVotes          PollVote[]
+  mutedPosts             MutedPost[]
+  adminLogs              AdminLog[]
+  appealVotes            AppealVote[]
+  suggestions            Suggestion[]
+  pollVotes              PollVote[]
+
+  @@index([createdAt])
 }
 
 model Follows {
@@ -83,10 +85,11 @@ model Follows {
   followingId String
   createdAt   DateTime @default(now())
 
-  follower    User @relation("follower", fields: [followerId], references: [id], onDelete: Cascade)
-  following   User @relation("following", fields: [followingId], references: [id], onDelete: Cascade)
+  follower  User @relation("follower", fields: [followerId], references: [id], onDelete: Cascade)
+  following User @relation("following", fields: [followingId], references: [id], onDelete: Cascade)
 
   @@id([followerId, followingId])
+  @@index([followingId])
 }
 
 model Suggestion {
@@ -108,90 +111,98 @@ model VerificationToken {
 }
 
 model Category {
-  id         String  @id @default(cuid())
-  name       String
-  slug       String  @unique
-  bannerUrl  String?
+  id            String  @id @default(cuid())
+  name          String
+  slug          String  @unique
+  bannerUrl     String?
   hoverImageUrl String?
-  orderIndex Int     @default(0)
-  protectMedia Boolean @default(false)
-  posts      Post[]
+  orderIndex    Int     @default(0)
+  protectMedia  Boolean @default(false)
+  posts         Post[]
 }
 
 model Post {
-  id         String   @id @default(cuid())
-  displayId  String   @unique // Format: ob200826173000
-  title      String
-  content    String
-  createdAt  DateTime @default(now())
-  
+  id        String   @id @default(cuid())
+  displayId String   @unique // Format: ob200826173000
+  title     String
+  content   String
+  createdAt DateTime @default(now())
+
   // Moderation fields
-  status            String   @default("ACTIVE") // ACTIVE, TAKEDOWN
-  takedownReason    String?
-  takedownMessage   String?
-  takedownAt        DateTime?
+  status          String    @default("ACTIVE") // ACTIVE, TAKEDOWN
+  takedownReason  String?
+  takedownMessage String?
+  takedownAt      DateTime?
 
-  watermarkText     String?
-  watermarkLogo     String?
-  isAiGenerated     Boolean  @default(false)
+  watermarkText String?
+  watermarkLogo String?
+  isAiGenerated Boolean @default(false)
 
-  authorId   String
-  categoryId String
-  author     User     @relation(fields: [authorId], references: [id])
-  category   Category @relation(fields: [categoryId], references: [id])
-  media      Media[]
-  comments   Comment[]
-  likes      Like[]
-  reports    Report[]
-  savedBy    SavedPost[]
+  authorId      String
+  categoryId    String
+  author        User           @relation(fields: [authorId], references: [id])
+  category      Category       @relation(fields: [categoryId], references: [id])
+  media         Media[]
+  comments      Comment[]
+  likes         Like[]
+  reports       Report[]
+  savedBy       SavedPost[]
   notifications Notification[]
-  mutedBy    MutedPost[]
-  poll       Poll?
+  mutedBy       MutedPost[]
+  poll          Poll?
+
+  @@index([status, createdAt])
+  @@index([categoryId, status, createdAt])
 }
 
 model Media {
-  id      String @id @default(cuid())
+  id      String  @id @default(cuid())
   url     String
   type    String // "IMAGE" or "VIDEO"
   caption String? @db.Text
   postId  String
-  post    Post   @relation(fields: [postId], references: [id], onDelete: Cascade)
+  post    Post    @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@index([postId])
 }
 
 model Comment {
-  id        String   @id @default(cuid())
-  content   String   @db.Text
-  createdAt DateTime @default(now())
+  id        String    @id @default(cuid())
+  content   String    @db.Text
+  createdAt DateTime  @default(now())
   editedAt  DateTime?
   imageUrl  String?
-  
-  // Moderation
-  status            String   @default("ACTIVE") // ACTIVE, TAKEDOWN
-  takedownReason    String?
-  takedownMessage   String?
-  takedownAt        DateTime?
 
-  authorId  String
-  postId    String
-  parentId  String?
-  author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
-  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
-  parent    Comment? @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
-  replies   Comment[] @relation("CommentReplies")
-  votes     CommentVote[]
+  // Moderation
+  status          String    @default("ACTIVE") // ACTIVE, TAKEDOWN
+  takedownReason  String?
+  takedownMessage String?
+  takedownAt      DateTime?
+
+  authorId      String
+  postId        String
+  parentId      String?
+  author        User           @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  post          Post           @relation(fields: [postId], references: [id], onDelete: Cascade)
+  parent        Comment?       @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies       Comment[]      @relation("CommentReplies")
+  votes         CommentVote[]
   notifications Notification[]
-  reports   Report[]
+  reports       Report[]
+
+  @@index([postId, createdAt])
 }
 
 model CommentVote {
-  id        String   @id @default(cuid())
+  id        String  @id @default(cuid())
   userId    String
   commentId String
-  type      Int      // 1 for upvote, -1 for downvote
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  comment   Comment  @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  type      Int // 1 for upvote, -1 for downvote
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  comment   Comment @relation(fields: [commentId], references: [id], onDelete: Cascade)
 
   @@unique([userId, commentId])
+  @@index([commentId])
 }
 
 model Like {
@@ -202,6 +213,7 @@ model Like {
   post   Post   @relation(fields: [postId], references: [id], onDelete: Cascade)
 
   @@unique([userId, postId])
+  @@index([postId])
 }
 
 model SavedPost {
@@ -216,51 +228,51 @@ model SavedPost {
 }
 
 model Report {
-  id         String   @id @default(cuid())
-  reason     String   @db.Text
-  status     String   @default("PENDING") // PENDING, RESOLVED
-  createdAt  DateTime @default(now())
-  
-  postId     String?
-  post       Post?    @relation(fields: [postId], references: [id], onDelete: Cascade)
-  
-  commentId  String?
-  comment    Comment? @relation(fields: [commentId], references: [id], onDelete: Cascade)
-  
+  id        String   @id @default(cuid())
+  reason    String   @db.Text
+  status    String   @default("PENDING") // PENDING, RESOLVED
+  createdAt DateTime @default(now())
+
+  postId String?
+  post   Post?   @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  commentId String?
+  comment   Comment? @relation(fields: [commentId], references: [id], onDelete: Cascade)
+
   reporterId String
-  reporter   User     @relation(fields: [reporterId], references: [id], onDelete: Cascade)
+  reporter   User   @relation(fields: [reporterId], references: [id], onDelete: Cascade)
 }
 
 model SiteSettings {
-  id          Int     @id @default(1)
-  siteTitle   String  @default("Strinova Guide Hub")
-  logoUrl     String?
-  bannerImage String?
-  popupEnabled Boolean @default(false)
-  popupText    String?
-  popupImageUrl String?
-  maintenanceMode Boolean @default(false)
-  siteDescription String?
-  maintenanceTitle String?
-  maintenanceMessage String?
-  maintenanceImageUrl String?
-  faviconUrl          String?
-  homeTitle           String?
-  siteTitleColor      String?
-  homeTitleColor      String?
-  siteDescColor       String?
-  loadingImageUrl     String?
-  maxUploadSizeMB     Int     @default(5)
-  rulesContent        String? @db.Text
-  googleAnalyticsId   String?
-  loginPromptIconUrl  String?
-  loginPromptMessage  String?
+  id                    Int     @id @default(1)
+  siteTitle             String  @default("Strinova Guide Hub")
+  logoUrl               String?
+  bannerImage           String?
+  popupEnabled          Boolean @default(false)
+  popupText             String?
+  popupImageUrl         String?
+  maintenanceMode       Boolean @default(false)
+  siteDescription       String?
+  maintenanceTitle      String?
+  maintenanceMessage    String?
+  maintenanceImageUrl   String?
+  faviconUrl            String?
+  homeTitle             String?
+  siteTitleColor        String?
+  homeTitleColor        String?
+  siteDescColor         String?
+  loadingImageUrl       String?
+  maxUploadSizeMB       Int     @default(5)
+  rulesContent          String? @db.Text
+  googleAnalyticsId     String?
+  loginPromptIconUrl    String?
+  loginPromptMessage    String?
   feedbackPromptIconUrl String?
   feedbackPromptMessage String?
-  geminiApiKey        String?
-  notFoundIconUrl     String?
-  notFoundMessage     String?
-  proxyCheckApiKey    String?
+  geminiApiKey          String?
+  notFoundIconUrl       String?
+  notFoundMessage       String?
+  proxyCheckApiKey      String?
 }
 
 model Notification {
@@ -273,10 +285,12 @@ model Notification {
   read      Boolean  @default(false)
   createdAt DateTime @default(now())
 
-  user      User     @relation("UserNotifications", fields: [userId], references: [id], onDelete: Cascade)
-  actor     User     @relation("NotificationActor", fields: [actorId], references: [id], onDelete: Cascade)
-  post      Post?    @relation(fields: [postId], references: [id], onDelete: Cascade)
-  comment   Comment? @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  user    User     @relation("UserNotifications", fields: [userId], references: [id], onDelete: Cascade)
+  actor   User     @relation("NotificationActor", fields: [actorId], references: [id], onDelete: Cascade)
+  post    Post?    @relation(fields: [postId], references: [id], onDelete: Cascade)
+  comment Comment? @relation(fields: [commentId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
 }
 
 model MutedPost {
@@ -285,8 +299,8 @@ model MutedPost {
   postId    String
   createdAt DateTime @default(now())
 
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
 
   @@unique([userId, postId])
 }
@@ -301,25 +315,25 @@ model AdminLog {
 }
 
 model Appeal {
-  id        String   @id @default(cuid())
-  type      String   // POST_TAKEDOWN, USER_BAN
-  targetId  String   // Post ID or User ID
-  status    String   @default("PENDING") // PENDING, RESOLVED_KEEP, RESOLVED_DELETE
-  reason    String   @db.Text
-  createdAt DateTime @default(now())
+  id         String       @id @default(cuid())
+  type       String // POST_TAKEDOWN, USER_BAN
+  targetId   String // Post ID or User ID
+  status     String       @default("PENDING") // PENDING, RESOLVED_KEEP, RESOLVED_DELETE
+  reason     String       @db.Text
+  createdAt  DateTime     @default(now())
   resolvedAt DateTime?
-  votes     AppealVote[]
+  votes      AppealVote[]
 }
 
 model AppealVote {
   id        String   @id @default(cuid())
   appealId  String
   adminId   String
-  vote      String   // KEEP, DELETE
+  vote      String // KEEP, DELETE
   createdAt DateTime @default(now())
 
-  appeal    Appeal   @relation(fields: [appealId], references: [id], onDelete: Cascade)
-  admin     User     @relation(fields: [adminId], references: [id], onDelete: Cascade)
+  appeal Appeal @relation(fields: [appealId], references: [id], onDelete: Cascade)
+  admin  User   @relation(fields: [adminId], references: [id], onDelete: Cascade)
 
   @@unique([appealId, adminId])
 }

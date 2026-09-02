@@ -1,8 +1,8 @@
 "use server"
 import { prisma } from "@/lib/prisma"
 import { getServerSession } from "next-auth"
-import { authOptions } from "@/app/api/auth/[...nextauth]/route"
-import { revalidatePath } from "next/cache"
+import { authOptions } from "@/lib/auth"
+import { revalidatePath, updateTag } from "next/cache"
 
 export async function saveSiteSettings(formData: FormData) {
   const session = await getServerSession(authOptions)
@@ -84,5 +84,6 @@ export async function saveSiteSettings(formData: FormData) {
   const { logAdminAction } = await import("@/lib/adminLogger")
   await logAdminAction(session.user.id, "UPDATE_SETTINGS", "Cập nhật cài đặt chung của website")
 
+  updateTag("settings")
   revalidatePath("/", "layout")
 }

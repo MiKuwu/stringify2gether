@@ -1,28 +1,36 @@
 "use server"
 import { prisma } from "@/lib/prisma"
 import { getServerSession } from "next-auth"
-import { authOptions } from "@/app/api/auth/[...nextauth]/route"
-import { revalidatePath } from "next/cache"
+import { authOptions } from "@/lib/auth"
+import { revalidatePath, updateTag } from "next/cache"
 import { redirect } from "next/navigation"
+import type { Prisma } from "@prisma/client"
+
+function refreshCachedPost(displayId: string) {
+  updateTag(`post:${displayId}`)
+  revalidatePath(`/post/${displayId}`)
+}
 
 export async function toggleLike(postId: string) {
   const session = await getServerSession(authOptions)
   if (!session) return false
 
   const userId = session.user.id
-  const existingLike = await prisma.like.findUnique({
-    where: { userId_postId: { userId, postId } }
-  })
+  const [existingLike, post] = await Promise.all([
+    prisma.like.findUnique({ where: { userId_postId: { userId, postId } } }),
+    prisma.post.findUnique({
+      where: { id: postId },
+      select: { authorId: true, displayId: true },
+    }),
+  ])
+  if (!post) return false
 
   if (existingLike) {
     await prisma.like.delete({ where: { id: existingLike.id } })
   } else {
     await prisma.like.create({ data: { userId, postId } })
-
-    // Fetch the post to get the authorId
-    const post = await prisma.post.findUnique({ where: { id: postId }, select: { authorId: true } })
     
-    if (post && post.authorId !== userId) {
+    if (post.authorId !== userId) {
       // Check if muted
       const isMuted = await prisma.mutedPost.findUnique({
         where: { userId_postId: { userId: post.authorId, postId } }
@@ -52,7 +60,7 @@ export async function toggleLike(postId: string) {
       }
     }
   }
-  revalidatePath(`/post/${postId}`)
+  refreshCachedPost(post.displayId)
   return true
 }
 
@@ -72,7 +80,6 @@ export async function toggleMutePost(postId: string) {
     await prisma.mutedPost.create({ data: { userId, postId } })
   }
   
-  revalidatePath(`/post/${postId}`)
   return true
 }
 
@@ -89,14 +96,14 @@ export async function addComment(postId: string, content: string, parentId?: str
       imageUrl: imageUrl || null
     },
     include: {
-      post: true,
-      parent: true
+      post: { select: { authorId: true, displayId: true } },
+      parent: { select: { authorId: true } },
     }
   })
 
   // Notification Logic
   let receiverId: string | null = null
-  let notifType = "REPLY"
+  const notifType = "REPLY"
 
   if (parentId && newComment.parent) {
     receiverId = newComment.parent.authorId
@@ -123,9 +130,7 @@ export async function addComment(postId: string, content: string, parentId?: str
     }
   }
 
-  revalidatePath(`/post/${postId}`)
-  // Also revalidate the specific displayId if available, wait, we don't know displayId here easily. 
-  // It's fine since we usually revalidate the current route.
+  refreshCachedPost(newComment.post.displayId)
   return true
 }
 
@@ -135,7 +140,11 @@ export async function deletePost(postId: string, noRedirect?: boolean) {
 
   const post = await prisma.post.findUnique({ 
     where: { id: postId },
-    include: { media: true, author: true }
+    include: {
+      media: true,
+      author: { select: { role: true } },
+      category: { select: { slug: true } },
+    }
   })
   if (!post) return false
   
@@ -164,6 +173,9 @@ export async function deletePost(postId: string, noRedirect?: boolean) {
   }
 
   await prisma.post.delete({ where: { id: postId } })
+  updateTag("posts")
+  updateTag(`category:${post.category.slug}`)
+  updateTag(`post:${post.displayId}`)
   
   if (noRedirect) {
     revalidatePath("/profile")
@@ -179,7 +191,10 @@ export async function takedownPost(postId: string, reason: string, message: stri
 
   const post = await prisma.post.findUnique({ 
     where: { id: postId },
-    include: { author: true } 
+    include: {
+      author: { select: { role: true } },
+      category: { select: { slug: true } },
+    }
   })
   if (!post) return false
 
@@ -217,7 +232,10 @@ export async function takedownPost(postId: string, reason: string, message: stri
 
   const { logAdminAction } = await import("@/lib/adminLogger")
   await logAdminAction(session.user.id, "TAKEDOWN_POST", `Gỡ bài viết ID: ${post.displayId} - Lý do: ${reason}`)
-  
+
+  updateTag("posts")
+  updateTag(`category:${post.category.slug}`)
+  updateTag(`post:${post.displayId}`)
   redirect("/")
 }
 
@@ -240,6 +258,16 @@ export async function voteComment(commentId: string, type: 1 | -1 | 0) {
   if (!session) return false
 
   const userId = session.user.id
+  const comment = await prisma.comment.findUnique({
+    where: { id: commentId },
+    select: {
+      id: true,
+      authorId: true,
+      postId: true,
+      post: { select: { displayId: true } },
+    },
+  })
+  if (!comment) return false
   
   if (type === 0) {
     // Remove vote
@@ -255,8 +283,7 @@ export async function voteComment(commentId: string, type: 1 | -1 | 0) {
     })
 
     // Send notification
-    const comment = await prisma.comment.findUnique({ where: { id: commentId } })
-    if (comment && comment.authorId !== userId) {
+    if (comment.authorId !== userId) {
       const isMuted = await prisma.mutedPost.findUnique({
         where: { userId_postId: { userId: comment.authorId, postId: comment.postId } }
       })
@@ -274,7 +301,8 @@ export async function voteComment(commentId: string, type: 1 | -1 | 0) {
       }
     }
   }
-  
+
+  refreshCachedPost(comment.post.displayId)
   return true
 }
 
@@ -300,10 +328,17 @@ export async function editComment(commentId: string, content: string, imageUrl?:
   const session = await getServerSession(authOptions)
   if (!session) return false
 
-  const comment = await prisma.comment.findUnique({ where: { id: commentId } })
+  const comment = await prisma.comment.findUnique({
+    where: { id: commentId },
+    select: {
+      authorId: true,
+      postId: true,
+      post: { select: { displayId: true } },
+    },
+  })
   if (!comment || comment.authorId !== session.user.id) return false
 
-  const dataToUpdate: any = {
+  const dataToUpdate: Prisma.CommentUpdateInput = {
     content,
     editedAt: new Date()
   }
@@ -317,7 +352,7 @@ export async function editComment(commentId: string, content: string, imageUrl?:
     data: dataToUpdate
   })
   
-  revalidatePath(`/post/${comment.postId}`)
+  refreshCachedPost(comment.post.displayId)
   return true
 }
 
@@ -325,12 +360,19 @@ export async function deleteComment(commentId: string) {
   const session = await getServerSession(authOptions)
   if (!session) return false
 
-  const comment = await prisma.comment.findUnique({ where: { id: commentId } })
+  const comment = await prisma.comment.findUnique({
+    where: { id: commentId },
+    select: {
+      authorId: true,
+      postId: true,
+      post: { select: { displayId: true } },
+    },
+  })
   if (!comment || comment.authorId !== session.user.id) return false
 
   await prisma.comment.delete({ where: { id: commentId } })
   
-  revalidatePath(`/post/${comment.postId}`)
+  refreshCachedPost(comment.post.displayId)
   return true
 }
 
@@ -340,7 +382,10 @@ export async function takedownComment(commentId: string, reason: string, message
 
   const comment = await prisma.comment.findUnique({ 
     where: { id: commentId },
-    include: { author: true }
+    include: {
+      author: { select: { role: true } },
+      post: { select: { displayId: true } },
+    }
   })
   if (!comment) return false
 
@@ -381,7 +426,7 @@ export async function takedownComment(commentId: string, reason: string, message
   const { logAdminAction } = await import("@/lib/adminLogger")
   await logAdminAction(session.user.id, "TAKEDOWN_COMMENT", `Gỡ bình luận ID: ${commentId} - Lý do: ${reason}`)
   
-  revalidatePath(`/post/${comment.postId}`)
+  refreshCachedPost(comment.post.displayId)
   return true
 }
 
@@ -447,7 +492,7 @@ ${cleanContent}`
     }
 
     return { summary }
-  } catch (err) {
+  } catch {
     return { error: "Lỗi kết nối đến AI" }
   }
 }

@@ -1,6 +1,6 @@
 "use server"
 import { prisma } from "@/lib/prisma"
-import { revalidatePath } from "next/cache"
+import { revalidatePath, updateTag } from "next/cache"
 
 export async function addCategory(formData: FormData) {
   const name = formData.get("name") as string
@@ -11,6 +11,7 @@ export async function addCategory(formData: FormData) {
     await prisma.category.create({
       data: { name, slug, orderIndex: count }
     })
+    updateTag("categories")
     revalidatePath("/admin/categories")
     revalidatePath("/")
   }
@@ -40,12 +41,15 @@ export async function deleteCategory(id: string) {
   }
 
   await prisma.category.delete({ where: { id } })
+  updateTag("categories")
+  updateTag("posts")
+  if (category) updateTag(`category:${category.slug}`)
   revalidatePath("/admin/categories")
   revalidatePath("/")
 }
 
 import { getServerSession } from "next-auth"
-import { authOptions } from "@/app/api/auth/[...nextauth]/route"
+import { authOptions } from "@/lib/auth"
 
 export async function updateCategory(formData: FormData) {
   const session = await getServerSession(authOptions)
@@ -75,6 +79,10 @@ export async function updateCategory(formData: FormData) {
     where: { id },
     data: { name, slug, bannerUrl: bannerUrl || null, hoverImageUrl: hoverImageUrl || null, protectMedia }
   })
+  updateTag("categories")
+  updateTag("posts")
+  if (oldCategory) updateTag(`category:${oldCategory.slug}`)
+  updateTag(`category:${slug}`)
   revalidatePath("/admin/categories")
   revalidatePath("/")
 }
@@ -89,6 +97,7 @@ export async function reorderCategories(orderedIds: string[]) {
       })
     )
   )
+  updateTag("categories")
   revalidatePath("/admin/categories")
   revalidatePath("/")
 }

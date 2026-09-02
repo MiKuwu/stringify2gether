@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
-import { authOptions } from "../auth/[...nextauth]/route"
+import { authOptions } from "@/lib/auth"
 import { v2 as cloudinary } from "cloudinary"
 
 export const maxDuration = 60 // Allow longer execution time for video uploads (Vercel Pro)

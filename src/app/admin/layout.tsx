@@ -1,5 +1,5 @@
 import { getServerSession } from "next-auth/next"
-import { authOptions } from "../api/auth/[...nextauth]/route"
+import { authOptions } from "@/lib/auth"
 import { redirect } from "next/navigation"
 import { Settings, Users, FileText, Layers, AlertTriangle, Book, List } from "lucide-react"
 import AdminSidebar from "./AdminSidebar"

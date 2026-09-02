@@ -1,5 +1,6 @@
 "use client"
 import Link from "next/link"
+import Image from "next/image"
 import { useState, useEffect } from "react"
 import { useSession, signIn, signOut } from "next-auth/react"
 import { UserCircle, ShieldAlert, ChevronDown } from "lucide-react"
@@ -86,12 +87,14 @@ export default function Navbar({
             className="flex-1 overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] flex items-center gap-2 font-medium text-sm mask-edges px-2"
           >
             {categories.map(cat => (
-              <Link key={cat.slug} href={`/category/${cat.slug}`} className="shrink-0 relative group px-4 py-2 rounded-lg transition-all duration-300 hover:ring-2 hover:ring-teal-400 hover:shadow-[0_0_15px_rgba(45,212,191,0.6)] overflow-hidden">
+              <Link key={cat.slug} href={`/category/${cat.slug}`} prefetch className="shrink-0 relative group px-4 py-2 rounded-lg transition-all duration-300 hover:ring-2 hover:ring-teal-400 hover:shadow-[0_0_15px_rgba(45,212,191,0.6)] overflow-hidden">
                 {cat.hoverImageUrl && (
-                  <img 
+                  <Image
                     src={cat.hoverImageUrl} 
                     alt="" 
-                    className="absolute inset-0 w-full h-full object-cover opacity-0 group-hover:opacity-40 transition-opacity duration-300 pointer-events-none z-0"
+                    fill
+                    sizes="160px"
+                    className="object-cover opacity-0 group-hover:opacity-40 transition-opacity duration-300 pointer-events-none z-0"
                   />
                 )}
                 <span className="relative z-10 group-hover:text-teal-600 dark:group-hover:text-teal-300 transition-colors whitespace-nowrap">{cat.name}</span>
@@ -123,6 +126,7 @@ export default function Navbar({
                   <Link
                     key={'dd-' + cat.slug}
                     href={`/category/${cat.slug}`}
+                    prefetch
                     className="px-4 py-2.5 hover:bg-slate-50 dark:hover:bg-slate-700/50 hover:text-teal-600 dark:text-slate-200 dark:hover:text-teal-400 transition-colors text-sm"
                     onClick={() => setShowDropdown(false)}
                   >
@@ -173,7 +177,7 @@ export default function Navbar({
       <div id="mobile-menu" className={`${isMobileMenuOpen ? "block" : "hidden"} md:hidden mt-4 pb-4 space-y-4 border-t border-slate-200 dark:border-slate-700 pt-4 font-medium`}>
         <div className="flex flex-col gap-4">
           {categories.map(cat => (
-            <Link key={cat.slug} href={`/category/${cat.slug}`} onClick={closeMobileMenu} className="hover:text-teal-500 dark:hover:text-teal-400 block px-4">
+            <Link key={cat.slug} href={`/category/${cat.slug}`} prefetch onClick={closeMobileMenu} className="hover:text-teal-500 dark:hover:text-teal-400 block px-4">
               {cat.name}
             </Link>
           ))}

@@ -1,11 +1,11 @@
-export const revalidate = 30
+export const revalidate = 300
 
-import { prisma } from "@/lib/prisma"
 import Link from "next/link"
 import Image from "next/image"
 import { notFound } from "next/navigation"
 import Pagination from "@/components/Pagination"
 import { Suspense } from "react"
+import { getCachedCategoryPosts } from "@/lib/cache"
 
 const PAGE_SIZE = 6
 
@@ -14,7 +14,6 @@ export default async function CategoryPage({ params, searchParams }: { params: P
   const { page } = await searchParams
   const currentPage = Math.max(1, parseInt(page || "1"))
 
-    const { getCachedCategoryPosts } = await import("@/lib/cache")
   const data = await getCachedCategoryPosts(slug, currentPage, PAGE_SIZE)
   if (!data) notFound()
   const { category, totalPosts, posts } = data;
@@ -24,7 +23,7 @@ export default async function CategoryPage({ params, searchParams }: { params: P
     <div>
       {category.bannerUrl && (
         <div className="w-full h-64 md:h-80 relative overflow-hidden">
-          <Image src={category.bannerUrl} alt={category.name} fill priority sizes="100vw" className="object-cover" />
+          <Image src={category.bannerUrl} alt={category.name} fill preload sizes="100vw" className="object-cover" />
           <div className="absolute inset-0 bg-gradient-to-t from-slate-950 to-transparent"></div>
         </div>
       )}
@@ -77,5 +76,3 @@ export default async function CategoryPage({ params, searchParams }: { params: P
     </div>
   )
 }
-
-

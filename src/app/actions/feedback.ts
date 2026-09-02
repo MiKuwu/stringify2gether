@@ -2,8 +2,8 @@
 
 import { prisma } from "@/lib/prisma"
 import { getServerSession } from "next-auth"
-import { authOptions } from "@/app/api/auth/[...nextauth]/route"
-import { revalidatePath } from "next/cache"
+import { authOptions } from "@/lib/auth"
+import { revalidatePath, updateTag } from "next/cache"
 
 export async function submitSuggestion(content: string, imageUrls: string[]) {
   const session = await getServerSession(authOptions)
@@ -60,7 +60,8 @@ export async function updateFeedbackSettings(message: string, iconUrl: string) {
       feedbackPromptIconUrl: iconUrl || null
     }
   })
-  
+
+  updateTag("settings")
   revalidatePath("/")
   revalidatePath("/admin/suggestions")
   return true

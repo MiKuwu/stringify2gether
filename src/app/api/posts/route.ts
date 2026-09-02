@@ -1,7 +1,13 @@
 import { NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
-import { authOptions } from "../auth/[...nextauth]/route"
+import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
+import { revalidateTag } from "next/cache"
+
+type PollOptionInput = {
+  text?: string | null
+  imageUrl?: string | null
+}
 
 export async function POST(request: Request) {
   const session = await getServerSession(authOptions)
@@ -79,6 +85,7 @@ export async function POST(request: Request) {
 
   // Create poll if provided
   if (poll && poll.question && poll.options && poll.options.length >= 2) {
+    const pollOptions = poll.options as PollOptionInput[]
     await prisma.poll.create({
       data: {
         question: poll.question,
@@ -88,13 +95,18 @@ export async function POST(request: Request) {
         expiresAt: poll.expiresAt ? new Date(poll.expiresAt) : null,
         postId: post.id,
         options: {
-          create: poll.options.filter((o: any) => o.text || o.imageUrl).map((o: any) => ({
+          create: pollOptions.filter(o => o.text || o.imageUrl).map(o => ({
             text: o.text || null,
             imageUrl: o.imageUrl || null
           }))
         }
       }
     })
+  }
+
+  if (post.status === "ACTIVE") {
+    revalidateTag("posts", "max")
+    revalidateTag(`category:${category.slug}`, "max")
   }
 
   return NextResponse.json(post)

@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma"
+import { Prisma } from "@prisma/client"
 
 import { unstable_cache } from "next/cache"
 
@@ -22,19 +23,42 @@ export async function findUserByCustomId(customId: string) {
   return user
 }
 
+type CustomIdRow = {
+  id: string
+  regionCode: string
+  userIndex: bigint
+}
+
+export async function getCustomIdsForUsers(userIds: string[]) {
+  const uniqueUserIds = [...new Set(userIds.filter(Boolean))]
+  if (uniqueUserIds.length === 0) return {} as Record<string, string>
+
+  const rows = await prisma.$queryRaw<CustomIdRow[]>(Prisma.sql`
+    SELECT
+      target."id",
+      target."regionCode",
+      (
+        SELECT COUNT(*)
+        FROM "User" AS earlier
+        WHERE earlier."createdAt" < target."createdAt"
+      ) AS "userIndex"
+    FROM "User" AS target
+    WHERE target."id" IN (${Prisma.join(uniqueUserIds)})
+  `)
+
+  return Object.fromEntries(
+    rows.map(row => [
+      row.id,
+      `${row.regionCode}${String(Number(row.userIndex)).padStart(9, "0")}`,
+    ])
+  )
+}
+
 export const getCustomIdForUser = async (userId: string) => {
   return unstable_cache(
     async () => {
-      const user = await prisma.user.findUnique({ where: { id: userId } })
-      if (!user) return null
-
-      const index = await prisma.user.count({
-        where: {
-          createdAt: { lt: user.createdAt }
-        }
-      })
-      
-      return `${user.regionCode}${String(index).padStart(9, "0")}`
+      const customIds = await getCustomIdsForUsers([userId])
+      return customIds[userId] ?? null
     },
     ['user-custom-id', userId],
     { tags: ['user-id', userId], revalidate: 3600 } // Cache for 1 hour

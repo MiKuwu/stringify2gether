@@ -1,18 +1,17 @@
-import { prisma } from "@/lib/prisma"
 import { notFound } from "next/navigation"
 import Link from "next/link"
+import Image from "next/image"
 import PostInteractions from "./PostInteractions"
-import { getCustomIdForUser } from "@/lib/user"
+import { getCustomIdsForUsers } from "@/lib/user"
 import PostUserActions from "./PostUserActions"
 import AiSummaryButton from "./AiSummaryButton"
 import MediaGallery from "./MediaGallery"
-import AppealForm from "@/app/banned/AppealForm"
 import ProtectMediaScript from "./ProtectMediaScript"
 import { Bot } from "lucide-react"
 import PollDisplay from "./PollDisplay"
 import { getCachedPost, getCachedSiteSettings } from "@/lib/cache"
 
-export const revalidate = 60
+export const revalidate = 300
 
 export default async function PostDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -43,23 +42,25 @@ export default async function PostDetailPage({ params }: { params: Promise<{ id:
     )
   }
 
-  const authorUid = await getCustomIdForUser(post.authorId)
+  const customIds = await getCustomIdsForUsers([
+    post.authorId,
+    ...post.comments.map(comment => comment.authorId),
+  ])
+  const authorUid = customIds[post.authorId] ?? ""
 
-  const commentsWithUid = await Promise.all(
-    post.comments.map(async (c) => {
-      const upvotes = c.votes.filter((v: any) => v.type === 1).length
-      const downvotes = c.votes.filter((v: any) => v.type === -1).length
+  const commentsWithUid = post.comments.map((c) => {
+      const upvotes = c.votes.filter(v => v.type === 1).length
+      const downvotes = c.votes.filter(v => v.type === -1).length
       return {
         ...c,
         upvotes,
         downvotes,
         score: upvotes - downvotes,
         userVote: 0, // Client will update this via PostInteractions
-        authorUid: await getCustomIdForUser(c.authorId),
+        authorUid: customIds[c.authorId] ?? "",
         hasAppealed: false, // Client component handles appeal state
       }
     })
-  )
 
   return (
     <div className="container mx-auto py-12 px-4 max-w-4xl">
@@ -88,9 +89,9 @@ export default async function PostDetailPage({ params }: { params: Promise<{ id:
 
       <div className="flex items-center gap-4 text-slate-600 dark:text-slate-400 mb-8 pb-8 border-b border-slate-200 dark:border-slate-800">
         <Link href={`/profile/${authorUid}`} className="shrink-0 hover:opacity-80 transition group">
-          <div className="w-11 h-11 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center font-bold text-teal-500 overflow-hidden group-hover:ring-2 ring-teal-500 transition">
+          <div className="relative w-11 h-11 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center font-bold text-teal-500 overflow-hidden group-hover:ring-2 ring-teal-500 transition">
             {post.author.image ? (
-              <img src={post.author.image} alt="Avatar" className="w-full h-full object-cover" />
+              <Image src={post.author.image} alt="Avatar" fill sizes="44px" className="object-cover" />
             ) : (
               post.author.username?.[0]?.toUpperCase() || "?"
             )}

@@ -1,12 +1,27 @@
 "use client"
 import { useState, useEffect, useRef } from "react"
 import { Bell } from "lucide-react"
-import Link from "next/link"
+import Image from "next/image"
 import { useRouter } from "next/navigation"
 import { useLoadingStore } from "@/lib/store"
 
+interface NotificationItem {
+  id: string
+  type: string
+  read: boolean
+  createdAt: string
+  actor: {
+    image?: string | null
+    username?: string | null
+  }
+  post?: {
+    title: string
+    displayId: string
+  } | null
+}
+
 export default function NotificationDropdown() {
-  const [notifications, setNotifications] = useState<any[]>([])
+  const [notifications, setNotifications] = useState<NotificationItem[]>([])
   const [isOpen, setIsOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
   const router = useRouter()
@@ -15,10 +30,28 @@ export default function NotificationDropdown() {
   const uploadProgress = useLoadingStore(state => state.uploadProgress)
 
   useEffect(() => {
-    fetchNotifications()
-    // Poll every 10s for more real-time feel
-    const interval = setInterval(fetchNotifications, 10000)
-    return () => clearInterval(interval)
+    let cancelled = false
+    const fetchNotifications = async () => {
+      const res = await fetch("/api/notifications")
+      if (res.ok && !cancelled) {
+        const data = await res.json()
+        setNotifications(data)
+      }
+    }
+
+    const fetchWhenVisible = () => {
+      if (document.visibilityState === "visible") void fetchNotifications()
+    }
+
+    fetchWhenVisible()
+    const interval = window.setInterval(fetchWhenVisible, 30000)
+    document.addEventListener("visibilitychange", fetchWhenVisible)
+
+    return () => {
+      cancelled = true
+      window.clearInterval(interval)
+      document.removeEventListener("visibilitychange", fetchWhenVisible)
+    }
   }, [])
 
   useEffect(() => {
@@ -31,20 +64,12 @@ export default function NotificationDropdown() {
     return () => document.removeEventListener("mousedown", handleClickOutside)
   }, [])
 
-  async function fetchNotifications() {
-    const res = await fetch("/api/notifications")
-    if (res.ok) {
-      const data = await res.json()
-      setNotifications(data)
-    }
-  }
-
   function markAllAsRead() {
     fetch("/api/notifications", { method: "PUT", body: JSON.stringify({}) })
     setNotifications(prev => prev.map(n => ({ ...n, read: true })))
   }
 
-  function handleClick(notif: any) {
+  function handleClick(notif: NotificationItem) {
     if (!notif.read) {
       fetch("/api/notifications", { 
         method: "PUT", 
@@ -111,7 +136,7 @@ export default function NotificationDropdown() {
                 >
                   <div className="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-700 shrink-0 overflow-hidden">
                     {n.actor.image ? (
-                      <img src={n.actor.image} alt="" className="w-full h-full object-cover" />
+                      <Image src={n.actor.image} alt="" width={32} height={32} sizes="32px" className="w-full h-full object-cover" />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center font-bold text-slate-600 dark:text-slate-400 text-xs">
                         {n.actor.username?.[0]?.toUpperCase()}

@@ -1,6 +1,5 @@
-export const revalidate = 30
+export const revalidate = 300
 
-import { prisma } from "@/lib/prisma"
 import Link from "next/link"
 import Image from "next/image"
 import HeroButtons from "@/components/HeroButtons"
@@ -15,9 +14,10 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ p
   const { page } = await searchParams
   const currentPage = Math.max(1, parseInt(page || "1"))
 
-  const settings = await getCachedSiteSettings()
-  
-  const { totalPosts, latestPosts } = await getCachedPosts(currentPage, PAGE_SIZE)
+  const [settings, { totalPosts, latestPosts }] = await Promise.all([
+    getCachedSiteSettings(),
+    getCachedPosts(currentPage, PAGE_SIZE),
+  ])
   const totalPages = Math.ceil(totalPosts / PAGE_SIZE)
 
 
@@ -30,10 +30,10 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ p
             src={settings.bannerImage}
             alt="Hero Banner"
             fill
-            priority
+            preload
             sizes="100vw"
             className="object-cover object-center"
-            quality={80}
+            quality={75}
           />
         )}
         <div className="absolute inset-0 bg-black/50 z-0"></div>
@@ -101,5 +101,3 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ p
     </div>
   )
 }
-
-

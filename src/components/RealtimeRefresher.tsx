@@ -10,7 +10,7 @@ export default function RealtimeRefresher() {
     // (reduced from 15s to avoid excessive DB network transfer)
     const interval = setInterval(() => {
       // Only refresh if user is near the top of the page to avoid layout shifts while reading
-      if (window.scrollY < 200) {
+      if (document.visibilityState === "visible" && window.scrollY < 200) {
         router.refresh()
       }
     }, 300000)
