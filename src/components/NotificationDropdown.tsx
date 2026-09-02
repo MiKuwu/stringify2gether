@@ -64,7 +64,7 @@ export default function NotificationDropdown() {
     <div className="relative" ref={menuRef}>
       <button 
         onClick={() => setIsOpen(!isOpen)}
-        className="relative p-2 text-slate-700 dark:text-slate-300 hover:text-white transition-colors"
+        className="relative p-2 text-slate-700 dark:text-slate-300 hover:text-teal-600 dark:hover:text-white transition-colors"
       >
         <Bell size={20} />
         {(unreadCount > 0 || isUploading) && (
@@ -77,7 +77,7 @@ export default function NotificationDropdown() {
       {isOpen && (
         <div className="absolute -left-2 md:left-auto md:right-0 mt-2 w-80 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg shadow-xl overflow-hidden z-50">
           <div className="p-3 border-b border-slate-300 dark:border-slate-700 flex items-center justify-between">
-            <h3 className="font-bold text-white">Thông báo</h3>
+            <h3 className="font-bold text-slate-900 dark:text-white">Thông báo</h3>
             {unreadCount > 0 && (
               <button onClick={markAllAsRead} className="text-xs text-teal-400 hover:text-teal-300">
                 Đánh dấu tất cả là đã đọc
@@ -120,7 +120,7 @@ export default function NotificationDropdown() {
                   </div>
                   <div className="flex-1 text-sm">
                     <p className="text-slate-700 dark:text-slate-300">
-                      <span className="font-bold text-white">{n.actor.username || "Ai đó"}</span>
+                      <span className="font-bold text-slate-900 dark:text-white">{n.actor.username || "Ai đó"}</span>
                       {n.type === "REPLY" && " đã trả lời bình luận của bạn."}
                       {n.type === "UPVOTE" && " đã upvote bình luận của bạn."}
                       {n.type === "DOWNVOTE" && " đã downvote bình luận của bạn."}

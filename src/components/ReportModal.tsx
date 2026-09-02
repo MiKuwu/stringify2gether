@@ -38,7 +38,7 @@ export default function ReportModal({
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
       <div className="bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 w-full max-w-md rounded-2xl shadow-2xl p-6 relative animate-in fade-in zoom-in duration-200">
-        <h3 className="text-xl font-bold text-white mb-4">Báo cáo vi phạm</h3>
+        <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-4">Báo cáo vi phạm</h3>
         <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">
           Vui lòng nhập chi tiết lý do bạn muốn báo cáo {commentId ? "bình luận" : "bài viết"} này. Admin sẽ xem xét và xử lý.
         </p>
@@ -49,7 +49,7 @@ export default function ReportModal({
             required
             autoFocus
             rows={4}
-            className="w-full bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-white p-3 rounded-lg focus:outline-none focus:border-teal-500 mb-6 resize-none"
+            className="w-full bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white p-3 rounded-lg focus:outline-none focus:border-teal-500 mb-6 resize-none"
             placeholder="Nội dung vi phạm, spam, ngôn từ kích động..."
           ></textarea>
           
@@ -58,7 +58,7 @@ export default function ReportModal({
               type="button"
               onClick={onClose}
               disabled={loading}
-              className="px-5 py-2 rounded-lg font-medium text-slate-700 dark:text-slate-300 hover:text-white hover:bg-slate-100 dark:bg-slate-800 transition-colors"
+              className="px-5 py-2 rounded-lg font-medium text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:bg-slate-800 transition-colors"
             >
               Hủy
             </button>

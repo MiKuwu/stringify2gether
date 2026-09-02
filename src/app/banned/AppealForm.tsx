@@ -36,7 +36,7 @@ export default function AppealForm({ type, targetId, alreadyAppealed }: { type: 
 
   return (
     <form onSubmit={handleSubmit} className="mt-8 text-left border-t border-slate-300 dark:border-slate-700 pt-6">
-      <h3 className="font-bold text-white mb-2 text-lg">Kháng nghị quyết định</h3>
+      <h3 className="font-bold text-slate-900 dark:text-white mb-2 text-lg">Kháng nghị quyết định</h3>
       <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">
         {type === "USER_BAN" 
           ? "Bạn có 24 giờ kể từ lúc bị khóa để gửi đơn kháng nghị. Hãy giải thích rõ lý do vì sao quyết định của Ban quản trị là không chính xác." 
@@ -45,7 +45,7 @@ export default function AppealForm({ type, targetId, alreadyAppealed }: { type: 
       <textarea
         value={reason}
         onChange={e => setReason(e.target.value)}
-        className="w-full bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded p-3 text-white focus:outline-none focus:border-orange-500 mb-3"
+        className="w-full bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded p-3 text-slate-900 dark:text-white focus:outline-none focus:border-orange-500 mb-3"
         rows={4}
         placeholder="Nhập lý do kháng nghị..."
       />

@@ -5,6 +5,7 @@ export const viewport: Viewport = {
   maximumScale: 1,
 };
 import { Inter } from "next/font/google";
+import Script from "next/script";
 import "./globals.css";
 import { Providers } from "@/components/Providers";
 import Navbar from "@/components/Navbar";
@@ -20,6 +21,22 @@ import { GoogleAnalytics } from "@next/third-parties/google";
 import FeedbackWidget from "@/components/FeedbackWidget";
 
 const inter = Inter({ subsets: ["latin"] });
+
+const scheduledThemeScript = `
+(function () {
+  try {
+    var preference = localStorage.getItem("theme-preference") || "auto";
+    var hour = new Date().getHours();
+    var theme = preference === "auto"
+      ? (hour >= 18 || hour < 6 ? "dark" : "light")
+      : preference;
+    localStorage.setItem("theme", theme);
+    document.documentElement.classList.remove("light", "dark");
+    document.documentElement.classList.add(theme);
+    document.documentElement.style.colorScheme = theme;
+  } catch (_) {}
+})();
+`;
 
 export async function generateMetadata(): Promise<Metadata> {
   const settings = await getCachedSiteSettings();
@@ -48,6 +65,9 @@ export default async function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
+        <Script id="scheduled-theme" strategy="beforeInteractive">
+          {scheduledThemeScript}
+        </Script>
         {settings?.googleAnalyticsId && <GoogleAnalytics gaId={settings.googleAnalyticsId} />}
       </head>
       <body className={`${inter.className} bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 min-h-screen flex flex-col`}>

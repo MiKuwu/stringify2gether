@@ -17,6 +17,7 @@ export default function Navbar({
 }) {
   const { data: session } = useSession()
   const [adminPendingCount, setAdminPendingCount] = useState(0)
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
   const scrollContainerRef = useRef<HTMLDivElement>(null)
   const [isOverflowing, setIsOverflowing] = useState(false)
@@ -62,20 +63,31 @@ export default function Navbar({
     return () => document.removeEventListener('click', handleClickOutside)
   }, [showDropdown])
 
+  const closeMobileMenu = () => setIsMobileMenuOpen(false)
+
 
   return (
     <nav className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white p-4 sticky top-0 z-50 shadow-md">
       <div className="container mx-auto flex items-center justify-between gap-4">
-        <Link href="/" className="shrink-0 text-xl font-bold uppercase tracking-wider text-teal-500 dark:text-teal-400 truncate max-w-[150px] sm:max-w-xs" style={siteTitleColor ? { color: siteTitleColor } : {}}>
+        <Link
+          href="/"
+          onClick={closeMobileMenu}
+          className="min-w-0 max-w-[12rem] shrink text-xl font-bold uppercase leading-tight tracking-wider text-teal-500 dark:text-teal-400 whitespace-normal break-words sm:max-w-xs md:shrink-0 md:whitespace-nowrap"
+          style={siteTitleColor ? { color: siteTitleColor } : {}}
+        >
           {siteTitle}
         </Link>
         
         {/* Mobile Menu Button */}
         <div className="md:hidden shrink-0">
-          <button onClick={() => {
-            const menu = document.getElementById('mobile-menu')
-            if (menu) menu.classList.toggle('hidden')
-          }} className="text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white p-2">
+          <button
+            type="button"
+            onClick={() => setIsMobileMenuOpen(open => !open)}
+            className="text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white p-2"
+            aria-controls="mobile-menu"
+            aria-expanded={isMobileMenuOpen}
+            aria-label={isMobileMenuOpen ? "Đóng menu" : "Mở menu"}
+          >
             <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
             </svg>
@@ -172,10 +184,10 @@ export default function Navbar({
       </div>
 
       {/* Mobile Menu Dropdown */}
-      <div id="mobile-menu" className="hidden md:hidden mt-4 pb-4 space-y-4 border-t border-slate-200 dark:border-slate-700 pt-4 font-medium">
+      <div id="mobile-menu" className={`${isMobileMenuOpen ? "block" : "hidden"} md:hidden mt-4 pb-4 space-y-4 border-t border-slate-200 dark:border-slate-700 pt-4 font-medium`}>
         <div className="flex flex-col gap-4">
           {categories.map(cat => (
-            <Link key={cat.slug} href={`/category/${cat.slug}`} className="hover:text-teal-500 dark:hover:text-teal-400 block px-4">
+            <Link key={cat.slug} href={`/category/${cat.slug}`} onClick={closeMobileMenu} className="hover:text-teal-500 dark:hover:text-teal-400 block px-4">
               {cat.name}
             </Link>
           ))}
@@ -193,7 +205,7 @@ export default function Navbar({
               </div>
               
               {(session.user.role === "ADMIN" || session.user.role === "ADMIN + FOUNDER") && (
-                <Link href="/admin" className="text-amber-500 dark:text-amber-400 hover:text-amber-600 dark:hover:text-amber-300 flex items-center gap-2">
+                <Link href="/admin" onClick={closeMobileMenu} className="text-amber-500 dark:text-amber-400 hover:text-amber-600 dark:hover:text-amber-300 flex items-center gap-2">
                   <div className="relative">
                     <ShieldAlert size={18} />
                     {adminPendingCount > 0 && (
@@ -206,10 +218,10 @@ export default function Navbar({
                   Quản trị viên
                 </Link>
               )}
-              <Link href="/profile" className="flex items-center gap-2 text-slate-700 dark:text-slate-300 hover:text-teal-500 dark:hover:text-teal-400 transition-colors">
+              <Link href="/profile" onClick={closeMobileMenu} className="flex items-center gap-2 text-slate-700 dark:text-slate-300 hover:text-teal-500 dark:hover:text-teal-400 transition-colors">
                 <UserCircle size={18} /> Profile
               </Link>
-              <button onClick={() => signOut()} className="w-full text-left text-sm text-red-500 dark:text-red-400 hover:text-red-600 dark:hover:text-red-300 py-2">
+              <button onClick={() => { closeMobileMenu(); signOut() }} className="w-full text-left text-sm text-red-500 dark:text-red-400 hover:text-red-600 dark:hover:text-red-300 py-2">
                 Đăng xuất
               </button>
             </div>

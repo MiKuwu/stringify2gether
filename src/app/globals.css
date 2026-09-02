@@ -3,3 +3,8 @@
 @custom-variant dark (&:is(.dark *));
 
 /* Allow next-themes to toggle this if needed, but Tailwind classes will handle background */
+
+/* Keep legacy white-text utilities readable when their element has a light surface. */
+html:not(.dark) :where(.bg-white, .bg-slate-50, .bg-slate-100, .bg-slate-200).text-white {
+  color: #0f172a;
+}

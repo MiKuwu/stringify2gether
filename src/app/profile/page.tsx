@@ -74,7 +74,7 @@ export default async function ProfilePage() {
         </div>
         <div className="flex-1 space-y-3 text-center md:text-left z-10">
           <div className="flex flex-col md:flex-row items-center justify-center md:justify-start gap-4">
-            <div className="text-3xl font-bold text-white">{user.username || "Chưa thiết lập"}</div>
+            <div className="text-3xl font-bold text-slate-900 dark:text-white">{user.username || "Chưa thiết lập"}</div>
             <SocialIcons facebook={user.facebookUrl} discord={user.discordUrl} youtube={user.youtubeUrl} />
           </div>
           <div className="text-slate-600 dark:text-slate-400 flex items-center justify-center md:justify-start gap-2">
@@ -84,9 +84,9 @@ export default async function ProfilePage() {
           <div className="text-slate-600 dark:text-slate-400 flex flex-wrap gap-4 items-center justify-center md:justify-start">
             <span>Vai trò: <span className={user.role === "ADMIN" || user.role === "ADMIN + FOUNDER" ? "text-amber-400 font-bold" : "text-slate-800 dark:text-slate-200"}>{user.role}</span></span>
             <span className="text-slate-600">•</span>
-            <span><strong className="text-white">{user._count.followers}</strong> Người theo dõi</span>
+            <span><strong className="text-slate-900 dark:text-white">{user._count.followers}</strong> Người theo dõi</span>
             <span className="text-slate-600">•</span>
-            <span><strong className="text-white">{user._count.following}</strong> Đang theo dõi</span>
+            <span><strong className="text-slate-900 dark:text-white">{user._count.following}</strong> Đang theo dõi</span>
           </div>
         </div>
       </div>

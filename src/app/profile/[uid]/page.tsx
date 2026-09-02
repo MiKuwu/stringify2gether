@@ -92,12 +92,12 @@ export default async function PublicProfilePage({ params, searchParams }: { para
           
           <div className="flex items-center justify-center md:justify-start gap-6 text-slate-700 dark:text-slate-300 mb-6">
             <div className="text-center">
-              <span className="block font-bold text-2xl text-white">{fullUser._count.followers}</span>
+              <span className="block font-bold text-2xl text-slate-900 dark:text-white">{fullUser._count.followers}</span>
               <span className="text-sm">Người theo dõi</span>
             </div>
             <div className="w-px h-10 bg-slate-200 dark:bg-slate-700"></div>
             <div className="text-center">
-              <span className="block font-bold text-2xl text-white">{fullUser._count.following}</span>
+              <span className="block font-bold text-2xl text-slate-900 dark:text-white">{fullUser._count.following}</span>
               <span className="text-sm">Đang theo dõi</span>
             </div>
           </div>
@@ -110,7 +110,7 @@ export default async function PublicProfilePage({ params, searchParams }: { para
             <FollowButton targetUserId={fullUser.id} initialFollowing={isFollowing} />
           )}
           {isSelf && (
-            <Link href="/profile" className="inline-block bg-slate-200 dark:bg-slate-700 hover:bg-slate-600 text-white px-6 py-2 rounded-full font-bold transition">
+            <Link href="/profile" className="inline-block bg-slate-200 dark:bg-slate-700 hover:bg-slate-600 text-slate-900 dark:text-white hover:text-white px-6 py-2 rounded-full font-bold transition">
               Sửa hồ sơ
             </Link>
           )}
@@ -184,4 +184,3 @@ export default async function PublicProfilePage({ params, searchParams }: { para
     </div>
   )
 }
-

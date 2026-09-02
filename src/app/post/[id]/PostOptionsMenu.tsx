@@ -154,7 +154,7 @@ export default function PostOptionsMenu({
               <div className="w-12 h-12 bg-red-500/20 text-red-500 rounded-full flex items-center justify-center mb-4">
                 <Trash2 size={24} />
               </div>
-              <h3 className="text-xl font-bold text-white mb-2">
+              <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">
                 {isAuthor ? "Xóa bài viết?" : "Gỡ bài viết (Takedown)"}
               </h3>
               
@@ -171,7 +171,7 @@ export default function PostOptionsMenu({
                     <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Lý do gỡ (Nội bộ Admin)</label>
                     <textarea 
                       id="takedownReason"
-                      className="w-full bg-slate-100 dark:bg-slate-800 border border-slate-600 rounded p-2 text-white focus:outline-none focus:border-red-500"
+                      className="w-full bg-slate-100 dark:bg-slate-800 border border-slate-600 rounded p-2 text-slate-900 dark:text-white focus:outline-none focus:border-red-500"
                       placeholder="Ghi rõ lý do..."
                       rows={2}
                     />
@@ -180,7 +180,7 @@ export default function PostOptionsMenu({
                     <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Lời nhắn đến tác giả</label>
                     <textarea 
                       id="takedownMessage"
-                      className="w-full bg-slate-100 dark:bg-slate-800 border border-slate-600 rounded p-2 text-white focus:outline-none focus:border-red-500"
+                      className="w-full bg-slate-100 dark:bg-slate-800 border border-slate-600 rounded p-2 text-slate-900 dark:text-white focus:outline-none focus:border-red-500"
                       placeholder="Giải thích cho người dùng..."
                       rows={2}
                     />
@@ -191,7 +191,7 @@ export default function PostOptionsMenu({
             <div className="p-4 bg-slate-100 dark:bg-slate-800/50 flex gap-3 justify-end border-t border-slate-300 dark:border-slate-700">
               <button 
                 onClick={() => setIsDeleteModalOpen(false)}
-                className="px-4 py-2 font-medium text-slate-700 dark:text-slate-300 hover:text-white hover:bg-slate-200 dark:bg-slate-700 rounded transition-colors"
+                className="px-4 py-2 font-medium text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:bg-slate-700 rounded transition-colors"
               >
                 Hủy
               </button>

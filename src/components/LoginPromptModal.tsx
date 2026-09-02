@@ -16,7 +16,7 @@ export default function LoginPromptModal({ iconUrl, defaultMessage }: { iconUrl?
       >
         <button 
           onClick={closePrompt}
-          className="absolute top-4 right-4 text-slate-600 dark:text-slate-400 hover:text-white transition-transform hover:rotate-90 hover:scale-110 duration-300"
+          className="absolute top-4 right-4 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-transform hover:rotate-90 hover:scale-110 duration-300"
         >
           <X size={20} />
         </button>
@@ -29,7 +29,7 @@ export default function LoginPromptModal({ iconUrl, defaultMessage }: { iconUrl?
               <LogIn size={32} />
             </div>
           )}
-          <h3 className="text-2xl font-bold text-white mb-2 tracking-tight">
+          <h3 className="text-2xl font-bold text-slate-900 dark:text-white mb-2 tracking-tight">
             Yêu cầu Đăng nhập
           </h3>
           <p className="text-slate-600 dark:text-slate-400 text-sm mb-6 leading-relaxed">

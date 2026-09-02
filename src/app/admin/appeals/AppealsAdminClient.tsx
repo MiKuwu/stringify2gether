@@ -63,7 +63,7 @@ export default function AppealsAdminClient({
       
       <div className="p-6 space-y-6 flex-1">
         <div>
-          <h3 className="text-lg font-bold text-white mb-2">
+          <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2">
             Đối tượng: {appeal.targetData.url ? (
               <a href={appeal.targetData.url} target="_blank" rel="noreferrer" className="text-teal-400 hover:underline">
                 {appeal.targetData.title}
@@ -95,11 +95,11 @@ export default function AppealsAdminClient({
           <div className="flex gap-4">
             <div className="flex-1 bg-white dark:bg-slate-900 rounded p-3 text-center border border-green-900/50">
               <div className="text-green-500 font-bold mb-1">GIỮ LẠI (Tha)</div>
-              <div className="text-2xl font-black text-white">{keepVotes.length}</div>
+              <div className="text-2xl font-black text-slate-900 dark:text-white">{keepVotes.length}</div>
             </div>
             <div className="flex-1 bg-white dark:bg-slate-900 rounded p-3 text-center border border-red-900/50">
               <div className="text-red-500 font-bold mb-1">GỠ / KHÓA (Phạt)</div>
-              <div className="text-2xl font-black text-white">{deleteVotes.length}</div>
+              <div className="text-2xl font-black text-slate-900 dark:text-white">{deleteVotes.length}</div>
             </div>
           </div>
         </div>

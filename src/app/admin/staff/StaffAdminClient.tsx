@@ -35,7 +35,7 @@ export default function StaffAdminClient({ staff, isFounder }: { staff: any[], i
         <tbody className="divide-y divide-slate-300 dark:divide-slate-700/50">
           {staff.map(user => (
             <tr key={user.id} className="hover:bg-slate-200 dark:bg-slate-700/30 transition">
-              <td className="p-4 font-medium text-white">{user.username || "Chưa thiết lập"}</td>
+              <td className="p-4 font-medium text-slate-900 dark:text-white">{user.username || "Chưa thiết lập"}</td>
               <td className="p-4 text-teal-400 font-mono text-sm">{user.displayId}</td>
               <td className="p-4">
                 {user.role === "ADMIN + FOUNDER" ? (
