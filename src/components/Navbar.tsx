@@ -1,6 +1,6 @@
 "use client"
 import Link from "next/link"
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect } from "react"
 import { useSession, signIn, signOut } from "next-auth/react"
 import { UserCircle, ShieldAlert, ChevronDown } from "lucide-react"
 import NotificationDropdown from "./NotificationDropdown"
@@ -19,8 +19,6 @@ export default function Navbar({
   const [adminPendingCount, setAdminPendingCount] = useState(0)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
-  const scrollContainerRef = useRef<HTMLDivElement>(null)
-  const [isOverflowing, setIsOverflowing] = useState(false)
   const [showDropdown, setShowDropdown] = useState(false)
 
   // Fetch admin pending count client-side — only for admins
@@ -40,18 +38,6 @@ export default function Navbar({
     const interval = setInterval(fetchCount, 60000) // refresh every 60s
     return () => clearInterval(interval)
   }, [session?.user?.role])
-
-  useEffect(() => {
-    const checkOverflow = () => {
-      if (scrollContainerRef.current) {
-        const { scrollWidth, clientWidth } = scrollContainerRef.current
-        setIsOverflowing(scrollWidth > clientWidth)
-      }
-    }
-    checkOverflow()
-    window.addEventListener('resize', checkOverflow)
-    return () => window.removeEventListener('resize', checkOverflow)
-  }, [categories])
 
   useEffect(() => {
     const handleClickOutside = () => {
@@ -97,7 +83,6 @@ export default function Navbar({
         {/* Desktop Menu - Categories (Scrollable with Dropdown) */}
         <div className="hidden md:flex flex-1 mx-4 relative items-center min-w-0">
           <div 
-            ref={scrollContainerRef}
             className="flex-1 overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] flex items-center gap-2 font-medium text-sm mask-edges px-2"
           >
             {categories.map(cat => (
@@ -114,38 +99,39 @@ export default function Navbar({
             ))}
           </div>
 
-          {isOverflowing && (
-            <div className="relative shrink-0 ml-1">
-              <button 
-                onClick={(e) => { e.stopPropagation(); setShowDropdown(!showDropdown) }}
-                className={`p-1.5 rounded-lg transition-colors flex items-center ${showDropdown ? 'bg-slate-200 dark:bg-slate-700 text-teal-600 dark:text-teal-400' : 'hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300'}`}
-                title="Xem tất cả chủ đề"
+          <div className="relative shrink-0 ml-1">
+            <button
+              type="button"
+              onClick={(e) => { e.stopPropagation(); setShowDropdown(!showDropdown) }}
+              className={`p-1.5 rounded-lg transition-colors flex items-center ${showDropdown ? 'bg-slate-200 dark:bg-slate-700 text-teal-600 dark:text-teal-400' : 'hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300'}`}
+              title="Xem tất cả chủ đề"
+              aria-label="Xem tất cả chủ đề"
+              aria-expanded={showDropdown}
+            >
+              <ChevronDown size={20} className={showDropdown ? "rotate-180 transition-transform" : "transition-transform"} />
+            </button>
+
+            {showDropdown && (
+              <div
+                className="absolute top-full right-0 mt-3 w-56 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-xl rounded-lg py-2 z-50 flex flex-col max-h-[70vh] overflow-y-auto"
+                onClick={e => e.stopPropagation()}
               >
-                <ChevronDown size={20} className={showDropdown ? "rotate-180 transition-transform" : "transition-transform"} />
-              </button>
-              
-              {showDropdown && (
-                <div 
-                  className="absolute top-full right-0 mt-3 w-56 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-xl rounded-lg py-2 z-50 flex flex-col max-h-[70vh] overflow-y-auto"
-                  onClick={e => e.stopPropagation()}
-                >
-                  <div className="px-4 py-2 text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider border-b border-slate-100 dark:border-slate-700/50 mb-1">
-                    Tất cả chủ đề ({categories.length})
-                  </div>
-                  {categories.map(cat => (
-                    <Link 
-                      key={'dd-' + cat.slug} 
-                      href={`/category/${cat.slug}`} 
-                      className="px-4 py-2.5 hover:bg-slate-50 dark:hover:bg-slate-700/50 hover:text-teal-600 dark:text-slate-200 dark:hover:text-teal-400 transition-colors text-sm"
-                      onClick={() => setShowDropdown(false)}
-                    >
-                      {cat.name}
-                    </Link>
-                  ))}
+                <div className="px-4 py-2 text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider border-b border-slate-100 dark:border-slate-700/50 mb-1">
+                  Tất cả chủ đề ({categories.length})
                 </div>
-              )}
-            </div>
-          )}
+                {categories.map(cat => (
+                  <Link
+                    key={'dd-' + cat.slug}
+                    href={`/category/${cat.slug}`}
+                    className="px-4 py-2.5 hover:bg-slate-50 dark:hover:bg-slate-700/50 hover:text-teal-600 dark:text-slate-200 dark:hover:text-teal-400 transition-colors text-sm"
+                    onClick={() => setShowDropdown(false)}
+                  >
+                    {cat.name}
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
           
         {/* Desktop Menu - User Controls */}
