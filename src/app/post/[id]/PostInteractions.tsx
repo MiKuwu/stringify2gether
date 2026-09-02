@@ -1,5 +1,5 @@
 "use client"
-import { useState } from "react"
+import { useRef, useState } from "react"
 import { toggleLike, addComment, deletePost, addReport, voteComment } from "./actions"
 import { Heart, MessageCircle, Share2, Trash2, Flag, ArrowBigUp, ArrowBigDown, Image as ImageIcon, X, Link as LinkIcon } from "lucide-react"
 import Link from "next/link"
@@ -8,6 +8,7 @@ import { useSession } from "next-auth/react"
 import ReportModal from "@/components/ReportModal"
 import { useAuthPromptStore } from "@/lib/store"
 import AppealForm from "@/app/banned/AppealForm"
+import { usePostInteractionState } from "./PostInteractionContext"
 
 import CommentOptionsMenu from "./CommentOptionsMenu"
 import { editComment } from "./actions"
@@ -373,22 +374,19 @@ function CommentItem({ comment, session, getReplies, postId }: { comment: any, s
 export default function PostInteractions({ 
   postId, 
   initialLikes, 
-  hasLiked,
-  isAuthor,
   comments,
-  displayId
 }: { 
   postId: string
   initialLikes: number
-  hasLiked: boolean
-  isAuthor: boolean
   comments: any[]
-  displayId: string
 }) {
   const { data: session } = useSession()
   const { openPrompt } = useAuthPromptStore()
-  const [likes, setLikes] = useState(initialLikes)
-  const [liked, setLiked] = useState(hasLiked)
+  const { state: interactionState, setLikeState } = usePostInteractionState()
+  const [isLikePending, setIsLikePending] = useState(false)
+  const likeRequestPending = useRef(false)
+  const likes = interactionState?.likeCount ?? initialLikes
+  const liked = interactionState?.hasLiked ?? false
   const [commentText, setCommentText] = useState("")
   const [commentImage, setCommentImage] = useState<File | null>(null)
   const [commentImageUrlStr, setCommentImageUrlStr] = useState("")
@@ -411,9 +409,29 @@ export default function PostInteractions({
       openPrompt("Vui lòng đăng nhập để thích bài viết này.")
       return
     }
-    setLiked(!liked)
-    setLikes(liked ? likes - 1 : likes + 1)
-    await toggleLike(postId)
+    if (!interactionState || likeRequestPending.current) return
+
+    const nextLiked = !liked
+    const nextLikes = Math.max(0, likes + (nextLiked ? 1 : -1))
+    likeRequestPending.current = true
+    setLikeState(nextLiked, nextLikes)
+    setIsLikePending(true)
+
+    try {
+      const result = await toggleLike(postId)
+      if (!result) {
+        setLikeState(liked, likes)
+        toast.error("Không thể cập nhật lượt thích.")
+      } else {
+        setLikeState(result.liked, result.likeCount)
+      }
+    } catch {
+      setLikeState(liked, likes)
+      toast.error("Không thể cập nhật lượt thích.")
+    } finally {
+      likeRequestPending.current = false
+      setIsLikePending(false)
+    }
   }
 
   function handleShare() {
@@ -471,7 +489,7 @@ export default function PostInteractions({
   return (
     <div className="mt-8 border-t border-slate-200 dark:border-slate-800 pt-8">
       <div className="flex flex-wrap gap-4 mb-8">
-        <button onClick={handleLike} className={`flex items-center gap-2 px-6 py-2 rounded-full font-bold transition-colors ${liked ? 'bg-pink-600 hover:bg-pink-500' : 'bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:bg-slate-700'}`}>
+        <button disabled={!!session && (!interactionState || isLikePending)} onClick={handleLike} className={`flex items-center gap-2 px-6 py-2 rounded-full font-bold transition-colors disabled:opacity-60 ${liked ? 'bg-pink-600 hover:bg-pink-500' : 'bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:bg-slate-700'}`}>
           <Heart size={20} fill={liked ? "currentColor" : "none"} /> {likes} Thích
         </button>
         <button onClick={handleShare} className="flex items-center gap-2 px-6 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:bg-slate-700 rounded-full font-bold transition-colors">

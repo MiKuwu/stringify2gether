@@ -61,7 +61,8 @@ export async function toggleLike(postId: string) {
     }
   }
   refreshCachedPost(post.displayId)
-  return true
+  const likeCount = await prisma.like.count({ where: { postId } })
+  return { liked: !existingLike, likeCount }
 }
 
 export async function toggleMutePost(postId: string) {

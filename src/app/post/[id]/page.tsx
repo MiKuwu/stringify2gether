@@ -10,6 +10,7 @@ import ProtectMediaScript from "./ProtectMediaScript"
 import { Bot } from "lucide-react"
 import PollDisplay from "./PollDisplay"
 import { getCachedPost, getCachedSiteSettings } from "@/lib/cache"
+import { PostInteractionProvider } from "./PostInteractionContext"
 
 export const revalidate = 300
 
@@ -63,7 +64,8 @@ export default async function PostDetailPage({ params }: { params: Promise<{ id:
     })
 
   return (
-    <div className="container mx-auto py-12 px-4 max-w-4xl">
+    <PostInteractionProvider postId={post.id} authorId={post.authorId} initialLikes={post._count.likes}>
+      <div className="container mx-auto py-12 px-4 max-w-4xl">
       {post.category.protectMedia && <ProtectMediaScript />}
 
       <div className="flex items-center justify-between mb-4">
@@ -77,7 +79,6 @@ export default async function PostDetailPage({ params }: { params: Promise<{ id:
           postId={post.id}
           displayId={post.displayId}
           authorId={post.authorId}
-          authorUid={authorUid || ""}
         />
       </div>
 
@@ -138,12 +139,10 @@ export default async function PostDetailPage({ params }: { params: Promise<{ id:
       <PostInteractions
         postId={post.id}
         initialLikes={post._count.likes}
-        hasLiked={false}
-        isAuthor={false}
         comments={commentsWithUid}
-        displayId={post.displayId}
       />
-    </div>
+      </div>
+    </PostInteractionProvider>
   )
 }
 

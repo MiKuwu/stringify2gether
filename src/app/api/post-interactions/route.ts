@@ -33,8 +33,9 @@ export async function GET(request: Request) {
   const isAuthor = userId === authorId
   const isAdminOrFounder = role === "ADMIN" || role === "ADMIN + FOUNDER"
 
-  const [likeCheck, saveCheck, muteCheck, followCheck] = await Promise.all([
+  const [likeCheck, likeCount, saveCheck, muteCheck, followCheck] = await Promise.all([
     prisma.like.findUnique({ where: { userId_postId: { userId, postId } }, select: { userId: true } }),
+    prisma.like.count({ where: { postId } }),
     prisma.savedPost.findUnique({ where: { userId_postId: { userId, postId } }, select: { userId: true } }),
     prisma.mutedPost.findUnique({ where: { userId_postId: { userId, postId } }, select: { userId: true } }),
     (!isAuthor ? prisma.follows.findUnique({
@@ -52,6 +53,7 @@ export async function GET(request: Request) {
 
   return NextResponse.json({
     hasLiked: !!likeCheck,
+    likeCount,
     hasSaved: !!saveCheck,
     isMuted: !!muteCheck,
     isFollowing: !!followCheck,
